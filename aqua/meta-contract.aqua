@@ -19,10 +19,14 @@ data MetaContractResult:
 
 data Metadata:
   hash: string
+  token_key: string
   data_key: string
+  meta_contract_id: string
   alias: string
   cid: string
   public_key: string
+  version: string
+  loose: i64
 
 data Transaction:
   hash: string
