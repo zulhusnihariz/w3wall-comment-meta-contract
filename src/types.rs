@@ -20,10 +20,14 @@ pub struct FinalMetadata {
 #[derive(Debug, Clone)]
 pub struct Metadata {
     pub hash: String,
+    pub token_key: String,
     pub data_key: String,
+    pub meta_contract_id: String,
     pub alias: String,
     pub cid: String,
     pub public_key: String,
+    pub version: String,
+    pub loose: i64,
 }
 
 #[marine]
