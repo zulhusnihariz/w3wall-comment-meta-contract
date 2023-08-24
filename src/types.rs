@@ -23,6 +23,7 @@ pub struct Metadata {
     pub token_key: String,
     pub data_key: String,
     pub meta_contract_id: String,
+    pub token_id: String,
     pub alias: String,
     pub cid: String,
     pub public_key: String,

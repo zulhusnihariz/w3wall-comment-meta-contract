@@ -22,6 +22,7 @@ data Metadata:
   token_key: string
   data_key: string
   meta_contract_id: string
+  token_id: string
   alias: string
   cid: string
   public_key: string
