@@ -54,6 +54,7 @@ pub struct Transaction {
 #[marine]
 #[derive(Debug, Default, Clone)]
 pub struct MetaContract {
+    pub hash: String,
     pub token_key: String,
     pub meta_contract_id: String,
     pub public_key: String,
