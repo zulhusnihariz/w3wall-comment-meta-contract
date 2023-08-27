@@ -14,6 +14,7 @@ pub struct FinalMetadata {
     pub alias: String,
     pub content: String,
     pub loose: i64,
+    pub version: String,
 }
 
 #[marine]

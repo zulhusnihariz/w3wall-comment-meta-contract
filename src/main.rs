@@ -47,6 +47,7 @@ pub fn on_execute(
         public_key: transaction.public_key,
         alias: transaction.alias,
         content: transaction.data,
+        version: transaction.version,
         loose,
     });
 
@@ -101,6 +102,7 @@ pub fn on_mint(contract: MetaContract, data_key: String, token_id: String, data:
                                   public_key: data.owner,
                                   alias: "".to_string(),
                                   content: data.cid,
+                                  version: data.version,
                                   loose: 0,
                               });
 

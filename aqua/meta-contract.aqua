@@ -5,6 +5,7 @@ data FinalMetadata:
   alias: string
   content: string
   loose: i64
+  version: string
 
 data MetaContract:
   hash: string

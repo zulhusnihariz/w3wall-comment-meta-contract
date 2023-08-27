@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Clone)]
 pub struct DataStructFork {
     pub owner: String,
-    pub data_key: String,
     pub cid: String,
+    pub version: String,
 }
 
 #[derive(Serialize, Deserialize)]
