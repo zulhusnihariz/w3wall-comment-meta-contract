@@ -16,9 +16,8 @@ use serde_json::to_value;
 use types::Block;
 use types::MetaContract;
 use types::Metadata;
-use types::CommentMetadata;
 use types::Transaction;
-use types::{FinalMetadata, MetaContractResult, FinalComment};
+use types::{SerdeMetadata, FinalMetadata, MetaContractResult, FinalComment};
 use ethabi::{decode, ParamType};
 
 module_manifest!();
@@ -39,22 +38,31 @@ pub fn on_execute(
     let mut finals: Vec<FinalMetadata> = vec![];
     let final_comment: FinalComment;
     let mut cid: String = "".to_string();
+    let mut parent_cid: String = "".to_string();
     let mut content: Vec<serde_json::Value> = vec![];
     
-    let serde_metadata: Result<CommentMetadata, serde_json::Error> = serde_json::from_str(&transaction.data.clone());
+    let serde_metadata: Result<SerdeMetadata, serde_json::Error> = serde_json::from_str(&transaction.data.clone());
 
     match serde_metadata {
-      Ok(metadata) => {
+      Ok(tx_data) => {
 
-        if metadata.text.is_empty() { 
+        if tx_data.cid.is_empty() { 
           return MetaContractResult {
             result: false,
             metadatas: Vec::new(),
-            error_string: "text cannot be empty".to_string(),
+            error_string: "Cid cannot be empty.".to_string(),
          };
         }
 
-        if is_profane(&metadata.text) {
+        if tx_data.content.text.is_empty() { 
+          return MetaContractResult {
+            result: false,
+            metadatas: Vec::new(),
+            error_string: "Text cannot be empty.".to_string(),
+         };
+        }
+
+        if is_profane(&tx_data.content.text) {
           return MetaContractResult {
               result: false,
               metadatas: Vec::new(),
@@ -62,7 +70,22 @@ pub fn on_execute(
           };
         }
 
-        final_comment= FinalComment::new(transaction.public_key.clone(), metadata.text);
+        if tx_data.is_invalid_media_link() {
+          return MetaContractResult {
+              result: false,
+              metadatas: Vec::new(),
+              error_string: "Invalid media link format.".to_string(),
+          };
+        }
+
+        parent_cid = tx_data.cid.clone();
+        final_comment= FinalComment::new(transaction.public_key.clone(), tx_data.content.text);
+
+        for metadata in metadatas.clone(){
+          if metadata.cid == tx_data.cid && metadata.alias =="comments" {
+            cid = metadata.cid;
+          }
+        }
       }
       Err(_) => {
         return MetaContractResult {
@@ -70,12 +93,6 @@ pub fn on_execute(
           metadatas: Vec::new(),
           error_string: "Data does not follow the required JSON schema".to_string(),
         }
-      }
-    }
-
-    for metadata in metadatas.clone(){
-      if metadata.alias == "comments" {
-        cid = metadata.cid;
       }
     }
 
@@ -97,7 +114,7 @@ pub fn on_execute(
             public_key: transaction.meta_contract_id,
             alias: "comments".to_string(),
             content,
-            version: transaction.version,
+            version: parent_cid,
             loose: 0,
         });
 
@@ -249,7 +266,7 @@ extern "C" {
 /**
  * For now leaving it empty. Freedom of speech
  */
-fn is_profane(text: &str) -> bool {
+pub fn is_profane(text: &str) -> bool {
   let profane_words = vec!["", ""];
   profane_words.iter().any(|&word| {
     if word != "" {
@@ -259,6 +276,6 @@ fn is_profane(text: &str) -> bool {
   })
 }
 
-fn is_nft_storage_link(link: &str) -> bool {
+pub fn is_nft_storage_link(link: &str) -> bool {
   link == "" || link.starts_with("https://nftstorage.link/ipfs/")
 }

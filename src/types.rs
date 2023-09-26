@@ -3,6 +3,7 @@ use serde::{ Deserialize, Serialize };
 use serde_json::Value ;
 
 use std::time::{ SystemTime, UNIX_EPOCH };
+use crate::is_nft_storage_link;
 
 #[marine]
 pub struct MetaContractResult {
@@ -66,8 +67,26 @@ pub struct MetaContract {
 }
 
 #[derive(Debug, Default, Deserialize)]
+pub struct Content {
+    pub text:String,
+    pub medias: Vec<String>
+}
+
+#[derive(Debug, Default, Deserialize)]
 pub struct SerdeMetadata {
-  pub loose: i64,
+    pub cid:String,
+    pub content: Content,
+}
+
+impl SerdeMetadata {
+    pub fn is_invalid_media_link(&self)-> bool {
+        for media in self.content.medias.iter() {
+           if !is_nft_storage_link(media) {
+            return true
+           }
+        }
+       false 
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -78,11 +97,6 @@ pub struct Block {
     pub transaction: Value,
 }
 
-#[derive(Debug, Default, Deserialize)]
-pub struct CommentMetadata {
-    pub text: String,
-    pub image: String,
-}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct FinalComment {
