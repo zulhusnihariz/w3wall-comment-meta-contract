@@ -1,6 +1,7 @@
 use marine_rs_sdk::marine;
-use serde::Deserialize; 
-use serde::Serialize; 
+use serde::{ Deserialize, Serialize };
+use serde_json::Value ;
+
 use std::time::{ SystemTime, UNIX_EPOCH };
 
 #[marine]
@@ -67,6 +68,14 @@ pub struct MetaContract {
 #[derive(Debug, Default, Deserialize)]
 pub struct SerdeMetadata {
   pub loose: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Block {
+    pub timestamp: u64,
+    pub content: Vec<Value>,
+    pub previous: Value,
+    pub transaction: Value,
 }
 
 #[derive(Debug, Default, Deserialize)]

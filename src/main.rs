@@ -12,6 +12,8 @@ use marine_rs_sdk::marine;
 use marine_rs_sdk::module_manifest;
 use marine_rs_sdk::MountedBinaryResult;
 use marine_rs_sdk::WasmLoggerBuilder;
+use serde_json::to_value;
+use types::Block;
 use types::MetaContract;
 use types::Metadata;
 use types::CommentMetadata;
@@ -35,9 +37,9 @@ pub fn on_execute(
     transaction: Transaction,
 ) -> MetaContractResult {
     let mut finals: Vec<FinalMetadata> = vec![];
-    let mut cid: String = "".to_string();
     let final_comment: FinalComment;
-    let mut content: Vec<FinalComment> = vec![];
+    let mut cid: String = "".to_string();
+    let mut content: Vec<serde_json::Value> = vec![];
     
     let serde_metadata: Result<CommentMetadata, serde_json::Error> = serde_json::from_str(&transaction.data.clone());
 
@@ -78,11 +80,13 @@ pub fn on_execute(
     }
 
     if !cid.is_empty() {
-      // get ipfs content by cid
-      // content = deserialized content
+      let ipfs_get_result = get(cid, "".to_string(), 0);
+      let block: Block = serde_json::from_str(&ipfs_get_result).unwrap();
+      content = block.content
     }
 
-    content.push(final_comment);
+    let final_comment_as_value = to_value(&final_comment).unwrap();
+    content.push(final_comment_as_value);
 
     let serialized_content= serde_json::to_string(&content);
 
@@ -94,7 +98,7 @@ pub fn on_execute(
             alias: "comments".to_string(),
             content,
             version: transaction.version,
-            loose: 1,
+            loose: 0,
         });
 
         MetaContractResult {
