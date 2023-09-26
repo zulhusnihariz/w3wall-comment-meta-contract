@@ -14,9 +14,9 @@ use marine_rs_sdk::MountedBinaryResult;
 use marine_rs_sdk::WasmLoggerBuilder;
 use types::MetaContract;
 use types::Metadata;
-use types::SerdeMetadata;
+use types::CommentMetadata;
 use types::Transaction;
-use types::{FinalMetadata, MetaContractResult};
+use types::{FinalMetadata, MetaContractResult, FinalComment};
 use ethabi::{decode, ParamType};
 
 module_manifest!();
@@ -35,26 +35,81 @@ pub fn on_execute(
     transaction: Transaction,
 ) -> MetaContractResult {
     let mut finals: Vec<FinalMetadata> = vec![];
+    let mut cid: String = "".to_string();
+    let final_comment: FinalComment;
+    let mut content: Vec<FinalComment> = vec![];
     
-    let serde_metadata: Result<SerdeMetadata, serde_json::Error> = serde_json::from_str(&transaction.mcdata.clone());
-    let loose;
+    let serde_metadata: Result<CommentMetadata, serde_json::Error> = serde_json::from_str(&transaction.data.clone());
 
     match serde_metadata {
-      Ok(sm) => loose = sm.loose,
-      _ => loose = 1,
-    }
-    finals.push(FinalMetadata {
-        public_key: transaction.public_key,
-        alias: transaction.alias,
-        content: transaction.data,
-        version: transaction.version,
-        loose,
-    });
+      Ok(metadata) => {
 
-    MetaContractResult {
-        result: true,
-        metadatas: finals,
-        error_string: "".to_string(),
+        if metadata.text.is_empty() { 
+          return MetaContractResult {
+            result: false,
+            metadatas: Vec::new(),
+            error_string: "text cannot be empty".to_string(),
+         };
+        }
+
+        if is_profane(&metadata.text) {
+          return MetaContractResult {
+              result: false,
+              metadatas: Vec::new(),
+              error_string: "Profanity found in the text.".to_string(),
+          };
+        }
+
+        final_comment= FinalComment::new(transaction.public_key.clone(), metadata.text);
+      }
+      Err(_) => {
+        return MetaContractResult {
+          result: false,
+          metadatas: Vec::new(),
+          error_string: "Data does not follow the required JSON schema".to_string(),
+        }
+      }
+    }
+
+    for metadata in metadatas.clone(){
+      if metadata.alias == "comments" {
+        cid = metadata.cid;
+      }
+    }
+
+    if !cid.is_empty() {
+      // get ipfs content by cid
+      // content = deserialized content
+    }
+
+    content.push(final_comment);
+
+    let serialized_content= serde_json::to_string(&content);
+
+    match serialized_content{
+      Ok(content) => {
+
+        finals.push(FinalMetadata {
+            public_key: transaction.meta_contract_id,
+            alias: "comments".to_string(),
+            content,
+            version: transaction.version,
+            loose: 1,
+        });
+
+        MetaContractResult {
+            result: true,
+            metadatas: finals,
+            error_string: "".to_string(),
+        }
+      }
+      Err(_) => {
+        return MetaContractResult {
+          result: false,
+          metadatas: Vec::new(),
+          error_string: "Unable to serialize content".to_string(),
+        }
+      }
     }
 }
 
@@ -185,4 +240,21 @@ pub fn get_timeout_string(timeout: u64) -> String {
 #[link(wasm_import_module = "host")]
 extern "C" {
   pub fn ipfs(cmd: Vec<String>) -> MountedBinaryResult;
+}
+
+/**
+ * For now leaving it empty. Freedom of speech
+ */
+fn is_profane(text: &str) -> bool {
+  let profane_words = vec!["", ""];
+  profane_words.iter().any(|&word| {
+    if word != "" {
+      return text.contains(word)
+    }
+    false
+  })
+}
+
+fn is_nft_storage_link(link: &str) -> bool {
+  link == "" || link.starts_with("https://nftstorage.link/ipfs/")
 }

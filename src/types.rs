@@ -1,5 +1,7 @@
 use marine_rs_sdk::marine;
-use serde::Deserialize;
+use serde::Deserialize; 
+use serde::Serialize; 
+use std::time::{ SystemTime, UNIX_EPOCH };
 
 #[marine]
 pub struct MetaContractResult {
@@ -65,4 +67,29 @@ pub struct MetaContract {
 #[derive(Debug, Default, Deserialize)]
 pub struct SerdeMetadata {
   pub loose: i64,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct CommentMetadata {
+    pub text: String,
+    pub image: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct FinalComment {
+   pub from: String,
+   pub message: String,
+   pub timestamp: u64,
+}
+
+impl FinalComment {
+   pub fn new(from: String, message: String) -> Self {
+        let now = SystemTime::now();
+        let timestamp= now.duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis() as u64;
+        FinalComment {
+            from,
+            message,
+            timestamp
+        }
+    }
 }
