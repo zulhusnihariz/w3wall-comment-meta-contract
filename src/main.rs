@@ -82,7 +82,7 @@ pub fn on_execute(
         final_comment= FinalComment::new(transaction.public_key.clone(), tx_data.content.text);
 
         for metadata in metadatas.clone(){
-          if metadata.cid == tx_data.cid && metadata.alias =="comments" {
+          if metadata.cid == tx_data.cid {
             cid = metadata.cid;
           }
         }
@@ -136,80 +136,22 @@ pub fn on_execute(
 
 #[marine]
 pub fn on_clone() -> bool {
-    return true;
+    return false;
 }
 
 #[marine]
-pub fn on_mint(contract: MetaContract, data_key: String, token_id: String, data: String) -> MetaContractResult {
-    let mut error: Option<String> = None;
-    let mut finals: Vec<FinalMetadata> = vec![];
-    // extract out data
-    if data.len() > 0 {
-
-        let data_bytes = &hex::decode(&data);
-
-        match data_bytes {
-          Ok(decoded) => {
-            let param_types = vec![
-              ParamType::String,
-              ParamType::String,
-              ParamType::String,
-            ];
-
-            let results = decode(&param_types, decoded);
-
-            match results {
-              Ok(result) => {
-                if result.len() == 3 {
-                  
-                  let ipfs_multiaddr = result[1].clone().to_string();
-                  let cid = result[2].clone().to_string();
-                  
-                  let datasets = get(cid, ipfs_multiaddr, 0);
-                  let result: Result<Vec<DataStructFork>, serde_json::Error> =
-                      serde_json::from_str(&datasets);
-
-                  match result {
-                      Ok(datas) => {
-
-                          for data in datas {
-
-                              finals.push(FinalMetadata {
-                                  public_key: data.owner,
-                                  alias: "".to_string(),
-                                  content: data.cid,
-                                  version: data.version,
-                                  loose: 0,
-                              });
-
-                          }
-                      }
-                      Err(e) => error = Some(format!("Invalid data structure: {}", e.to_string())),
-                  }
-                }
-              },
-              Err(e) => error = Some(format!("Invalid data structure: {}", e.to_string())),
-            }
-          },
-          Err(e) => error = Some(format!("Invalid data structure: {}", e.to_string())),
-        }
-    }
-
-    if !error.is_none() {
-      return MetaContractResult {
-        result: false,
-        metadatas: Vec::new(),
-        error_string: error.unwrap().to_string(),
-      };
-    }
-
+pub fn on_mint(
+    contract: MetaContract,
+    data_key: String,
+    token_id: String,
+    data: String,
+) -> MetaContractResult {
     MetaContractResult {
-        result: true,
-        metadatas: finals,
-        error_string: "".to_string(),
+        result: false,
+        metadatas: vec![],
+        error_string: "on_mint is not available".to_string(),
     }
 }
-
 /**
  * Get data from ipfs
  */
