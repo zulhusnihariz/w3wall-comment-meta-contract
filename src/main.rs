@@ -82,8 +82,8 @@ pub fn on_execute(
         final_comment= FinalComment::new(transaction.public_key.clone(), tx_data.content.text);
 
         for metadata in metadatas.clone(){
-          if metadata.cid == tx_data.cid {
-            cid = metadata.cid;
+          if metadata.version == tx_data.cid {
+            cid = metadata.version;
           }
         }
       }
