@@ -83,7 +83,7 @@ pub fn on_execute(
 
         for metadata in metadatas.clone(){
           if metadata.version == tx_data.cid {
-            cid = metadata.version;
+            cid = metadata.cid;
           }
         }
       }
