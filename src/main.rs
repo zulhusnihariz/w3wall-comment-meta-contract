@@ -111,9 +111,21 @@ pub fn on_execute(
       Ok(content) => {
 
         finals.push(FinalMetadata {
-            public_key: transaction.meta_contract_id,
+            public_key: transaction.meta_contract_id.clone(),
             alias: "comments".to_string(),
-            content,
+            content: content.clone(),
+            version: parent_cid.clone(),
+            loose: 0,
+        });
+
+        let mut map = HashMap::new();
+        map.insert(String::from("total"), content.len());
+        let total = serde_json::to_string(&map).unwrap();
+
+        finals.push(FinalMetadata {
+            public_key: transaction.meta_contract_id,
+            alias: "total_comments".to_string(),
+            content: total,
             version: parent_cid,
             loose: 0,
         });
